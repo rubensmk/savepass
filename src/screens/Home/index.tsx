@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-
 import { Header } from '../../components/Header';
 import { SearchBar } from '../../components/SearchBar';
 import { LoginDataItem } from '../../components/LoginDataItem';
@@ -30,15 +29,30 @@ export function Home() {
 
   async function loadData() {
     const dataKey = '@savepass:logins';
-    // Get asyncStorage data, use setSearchListData and setData
+    const response = await AsyncStorage.getItem(dataKey);
+
+    const parsedData = response ? JSON.parse(response) : [];
+
+    setData(parsedData);
+    setSearchListData(parsedData);
   }
 
   function handleFilterLoginData() {
-    // Filter results inside data, save with setSearchListData
+
+    const filteredData = searchListData.filter(data => {
+      const isValid = data.service_name.toLowerCase().includes(searchText.toLowerCase());
+      if (isValid) {
+        return data;
+      }
+    });
+    setSearchListData(filteredData);
   }
 
   function handleChangeInputText(text: string) {
-    // Update searchText value
+    if (!text) {
+      setSearchListData(data);
+    }
+    setSearchText(text);
   }
 
   useFocusEffect(useCallback(() => {
@@ -79,6 +93,7 @@ export function Home() {
           data={searchListData}
           renderItem={({ item: loginData }) => {
             return <LoginDataItem
+              key={loginData.id}
               service_name={loginData.service_name}
               email={loginData.email}
               password={loginData.password}
